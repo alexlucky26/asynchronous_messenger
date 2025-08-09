@@ -1,0 +1,62 @@
+# Ищем папки с библиотеками Boost и Conan
+# и добавляем их в .gitignore, если они там есть
+
+# Conan and CMake generated files
+Config/boost/*
+!Config/boost/.gitkeep
+Config/cmake/*
+!Config/cmake/.gitkeep
+
+# Remove old patterns if they exist in root
+# FindBoost*.cmake
+# Boost*.cmake
+# conan*.cmake
+
+# Build directories
+build/
+build-*/
+CMakeFiles/
+cmake_install.cmake
+CMakeCache.txt
+Makefile
+
+# Visual Studio Code
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.vscode/c_cpp_properties.json
+
+# Conan
+conandata.yml
+conanfile.txt
+conan_toolchain.cmake
+Config/cmake/conan_toolchain.cmake
+deactivate_conanrun.bat
+deactivate_conanbuild.bat
+
+# Compiled executables
+*.exe
+*.out
+*.app
+
+# Object files
+*.o
+*.obj
+
+# Debug files
+*.pdb
+*.ilk
+
+# CMake
+compile_commands.json
+CTestTestfile.cmake
+
+# OS specific
+Thumbs.db
+.DS_Store
+
+# IDE
+*.vcxproj*
+*.sln
+*.suo
+*.user
