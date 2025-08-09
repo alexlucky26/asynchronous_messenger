@@ -18,7 +18,10 @@ private:
         boost::asio::async_connect(socket_, endpoints,
             [this](boost::system::error_code ec, tcp::endpoint) {
                 if (!ec) {
+                    std::cout << "Connected to server!" << std::endl;
                     send_request();
+                } else {
+                    std::cerr << "Connection failed: " << ec.message() << std::endl;
                 }
             });
     }
@@ -56,9 +59,17 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    boost::asio::io_context io_context;
-    Client client(io_context, argv[1], argv[2]);
-    io_context.run();
+    try {
+        std::cout << "Connecting to " << argv[1] << ":" << argv[2] << std::endl;
+        
+        boost::asio::io_context io_context;
+        Client client(io_context, argv[1], argv[2]);
+        io_context.run();
+        
+        std::cout << "Client finished." << std::endl;
+    } catch (std::exception& e) {
+        std::cerr << "Exception: " << e.what() << std::endl;
+    }
 
     return 0;
 }

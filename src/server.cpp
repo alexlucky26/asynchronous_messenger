@@ -50,7 +50,10 @@ private:
         acceptor_.async_accept(
             [this](boost::system::error_code ec, tcp::socket socket) {
                 if (!ec) {
+                    std::cout << "New client connected!" << std::endl;
                     std::make_shared<Session>(std::move(socket))->start();
+                } else {
+                    std::cerr << "Accept error: " << ec.message() << std::endl;
                 }
                 do_accept();
             });
@@ -66,8 +69,13 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
+        int port = std::atoi(argv[1]);
+        std::cout << "Starting server on port " << port << std::endl;
+        
         boost::asio::io_context io_context;
-        Server server(io_context, std::atoi(argv[1]));
+        Server server(io_context, port);
+        
+        std::cout << "Server listening on port " << port << std::endl;
         io_context.run();
     } catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n";
