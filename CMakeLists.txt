@@ -25,8 +25,15 @@ elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/conan_toolchain.cmake")
     include("${CMAKE_CURRENT_SOURCE_DIR}/conan_toolchain.cmake")
 endif()
 
+# Include Conan dependencies
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Config/cmake/conandeps_legacy.cmake")
+    include("${CMAKE_CURRENT_SOURCE_DIR}/Config/cmake/conandeps_legacy.cmake")
+endif()
+
 # Find Boost package with required components
 find_package(Boost REQUIRED COMPONENTS system)
+find_package(SQLite3 REQUIRED)
+#find_package(nlohmann_json REQUIRED)
 
 # Add src subdirectory
 add_subdirectory(src)
