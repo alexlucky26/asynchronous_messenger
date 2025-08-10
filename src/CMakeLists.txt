@@ -41,6 +41,7 @@ if(WIN32)
             PRIVATE
             Boost::system
             sqlite3
+            nlohmann_json::nlohmann_json
             ws2_32      # Windows Sockets 2.0
             mswsock     # Microsoft Winsock
             ucrt
@@ -51,6 +52,7 @@ if(WIN32)
             PRIVATE
             Boost::system
             sqlite3
+            nlohmann_json::nlohmann_json
             ws2_32      # Windows Sockets 2.0
             mswsock     # Microsoft Winsock
         )
@@ -59,6 +61,7 @@ if(WIN32)
     target_link_libraries(client 
         PRIVATE
         Boost::system
+        nlohmann_json::nlohmann_json
         ws2_32
         mswsock  
     )
@@ -69,12 +72,14 @@ elseif(UNIX)
         PRIVATE
         Boost::system
         sqlite3
+        nlohmann_json::nlohmann_json
         pthread     # POSIX threads
         dl          # Dynamic loading
     )
     target_link_libraries(client 
         PRIVATE
         Boost::system
+        nlohmann_json::nlohmann_json
         pthread
     )
     
@@ -84,11 +89,13 @@ elseif(APPLE)
         PRIVATE
         Boost::system
         sqlite3
+        nlohmann_json::nlohmann_json
         pthread
     )
     target_link_libraries(client 
         PRIVATE
         Boost::system
+        nlohmann_json::nlohmann_json
         pthread
     )
 endif()

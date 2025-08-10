@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 
-const int PORT = 12345;
+const int PORT = 9999;
 const std::string SERVER_ADDRESS = "127.0.0.1";
 
 void log(const std::string& message) {

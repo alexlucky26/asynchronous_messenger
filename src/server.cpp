@@ -1,9 +1,23 @@
+// Сервер должен реализовывать:
+// Обработку подключений клиентов с использованием Boost.Asio (асинхронно)
+// Регистрацию и авторизацию пользователей (с проверкой и хешированием пароля)
+// Хранение пользовательских данных и истории сообщений в БД (SQLite)
+// Асинхронную маршрутизацию сообщений между пользователями
+// Сохранение сообщений для оффлайн-пользователей
+// Уведомления о статусе "typing"
+// (Опционально) Уничтожение сессии клиента при неактивности по таймауту
+// (Опционально) Приём и передача файлов через сервер
+
 #include <iostream>
 #include <boost/asio.hpp>
 #include <memory>
+#include <ctime>
+#include <nlohmann/json.hpp>
 #include "include/common.hpp"
+#include "include/database.hpp"
 
 using boost::asio::ip::tcp;
+using json = nlohmann::json;
 
 class Session : public std::enable_shared_from_this<Session> {
 public:
@@ -41,7 +55,8 @@ private:
 class Server {
 public:
     Server(boost::asio::io_context& io_context, short port)
-        : acceptor_(io_context, tcp::endpoint(tcp::v4(), port)) {
+        : acceptor_(io_context, tcp::endpoint(tcp::v4(), port)),
+          db_("messenger.db") {
         do_accept();
     }
 
@@ -60,22 +75,39 @@ private:
     }
 
     tcp::acceptor acceptor_;
+    Database db_;
 };
 
 int main(int argc, char* argv[]) {
     try  {
-        if (argc != 2) {
+        int port = PORT;
+        if (argc > 2) {
             std::cerr << "Usage: server <port>\n";
             return 1;
         }
+        else if (argc == 2)
+        {
+            int port = std::atoi(argv[1]);
+        }
 
-        int port = std::atoi(argv[1]);
+        
         std::cout << "Starting server on port " << port << std::endl;
         
         boost::asio::io_context io_context;
         Server server(io_context, port);
         
         std::cout << "Server listening on port " << port << std::endl;
+
+        // Пример JSON сообщения
+        json example_message;
+        example_message["type"] = "message";
+        example_message["from"] = "user1";
+        example_message["to"] = "user2";
+        example_message["content"] = "Hello, World!";
+        example_message["timestamp"] = std::time(nullptr);
+        
+        std::cout << "Example JSON message: " << example_message.dump(4) << std::endl;
+        
         io_context.run();
     } catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n";

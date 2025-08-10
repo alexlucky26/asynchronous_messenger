@@ -33,7 +33,7 @@ endif()
 # Find Boost package with required components
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(SQLite3 REQUIRED)
-#find_package(nlohmann_json REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 # Add src subdirectory
 add_subdirectory(src)
