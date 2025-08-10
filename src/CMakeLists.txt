@@ -19,8 +19,16 @@ foreach(path IN LISTS CMAKE_LIBRARY_PATH)
 endforeach()
 
 # Create executables
-add_executable(server server.cpp)
+add_executable(server 
+    server.cpp 
+    database.cpp
+    user_manager.cpp
+    router.cpp
+    json_parser.cpp
+    session.cpp
+)
 add_executable(client client.cpp)
+add_executable(simple_test_client simple_test_client.cpp)
 
 # Set C++ properties and include directories
 target_include_directories(server PRIVATE 
@@ -65,6 +73,13 @@ if(WIN32)
         ws2_32
         mswsock  
     )
+    target_link_libraries(simple_test_client 
+        PRIVATE
+        Boost::system
+        nlohmann_json::nlohmann_json
+        ws2_32
+        mswsock  
+    )
     
 elseif(UNIX)
     # Linux/Unix libraries
@@ -77,6 +92,12 @@ elseif(UNIX)
         dl          # Dynamic loading
     )
     target_link_libraries(client 
+        PRIVATE
+        Boost::system
+        nlohmann_json::nlohmann_json
+        pthread
+    )
+    target_link_libraries(simple_test_client 
         PRIVATE
         Boost::system
         nlohmann_json::nlohmann_json
@@ -98,9 +119,15 @@ elseif(APPLE)
         nlohmann_json::nlohmann_json
         pthread
     )
+    target_link_libraries(simple_test_client 
+        PRIVATE
+        Boost::system
+        nlohmann_json::nlohmann_json
+        pthread
+    )
 endif()
 
 # Set output directory for executables (optional)
-set_target_properties(server client PROPERTIES
+set_target_properties(server client simple_test_client PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )

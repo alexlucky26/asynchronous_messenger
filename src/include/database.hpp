@@ -5,6 +5,26 @@
 #include <string>
 #include <iostream>
 #include <stdexcept>
+#include <vector>
+#include <memory>
+
+struct User {
+    int id;
+    std::string username;
+    std::string email;
+    std::string password_hash;
+    std::string created_at;
+};
+
+struct Message {
+    int id;
+    int sender_id;
+    int receiver_id;
+    std::string content;
+    std::string sent_at;
+    bool is_file;
+    std::string file_path;
+};
 
 class Database {
 public:
@@ -25,24 +45,18 @@ public:
         }
     }
 
+    // User operations
+    bool addUser(const std::string& username, const std::string& email, const std::string& password_hash);
+    std::unique_ptr<User> getUser(const std::string& username);
+    std::unique_ptr<User> getUserById(int user_id);
+    
+    // Message operations
+    bool storeMessage(int sender_id, int receiver_id, const std::string& content, bool is_file = false, const std::string& file_path = "");
+    std::vector<Message> getMessages(int user_id, int other_user_id, int limit = 50);
+    std::vector<Message> getOfflineMessages(int user_id);
+
 private:
-    void initialize() {
-        const char* sql = 
-            "CREATE TABLE IF NOT EXISTS users ("
-            "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-            "username TEXT NOT NULL UNIQUE,"
-            "password_hash TEXT NOT NULL);";
-
-        char* err_msg = nullptr;
-        if (sqlite3_exec(db_, sql, 0, 0, &err_msg) != SQLITE_OK) {
-            std::string error = "SQL error on table creation: ";
-            error += err_msg;
-            sqlite3_free(err_msg);
-            throw std::runtime_error(error);
-        }
-        std::cout << "Users table initialized successfully." << std::endl;
-    }
-
+    void initialize();
     sqlite3* db_ = nullptr;
 };
 
