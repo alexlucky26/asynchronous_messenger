@@ -1,10 +1,10 @@
-#ifndef ROUTER_HPP
-#define ROUTER_HPP
+#ifndef ROUTER_H
+#define ROUTER_H
 
 #include <memory>
 #include <nlohmann/json.hpp>
-#include "database.hpp"
-#include "user_manager.hpp"
+#include "database.h"
+#include "user_manager.h"
 
 class Session; // Forward declaration
 

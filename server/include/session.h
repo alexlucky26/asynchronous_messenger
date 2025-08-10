@@ -1,5 +1,5 @@
-#ifndef SESSION_HPP
-#define SESSION_HPP
+#ifndef SESSION_H
+#define SESSION_H
 
 #include <boost/asio.hpp>
 #include <nlohmann/json.hpp>

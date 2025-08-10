@@ -1,11 +1,11 @@
-#ifndef USER_MANAGER_HPP
-#define USER_MANAGER_HPP
+#ifndef USER_MANAGER_H
+#define USER_MANAGER_H
 
 #include <string>
 #include <map>
 #include <memory>
 #include <functional>
-#include "database.hpp"
+#include "database.h"
 
 class Session; // Forward declaration
 

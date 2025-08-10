@@ -1,11 +1,11 @@
-#ifndef JSON_PARSER_HPP
-#define JSON_PARSER_HPP
+#ifndef JSON_PARSER_H
+#define JSON_PARSER_H
 
 #include <string>
 #include <memory>
 #include <nlohmann/json.hpp>
-#include "user_manager.hpp"
-#include "router.hpp"
+#include "user_manager.h"
+#include "router.h"
 
 class Session; // Forward declaration
 

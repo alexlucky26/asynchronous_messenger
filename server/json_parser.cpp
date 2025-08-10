@@ -1,5 +1,5 @@
-#include "include/json_parser.hpp"
-#include "include/session.hpp"
+#include "include/json_parser.h"
+#include "include/session.h"
 #include <iostream>
 #include <ctime>
 

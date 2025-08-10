@@ -35,5 +35,6 @@ find_package(Boost REQUIRED COMPONENTS system)
 find_package(SQLite3 REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
-# Add src subdirectory
-add_subdirectory(src)
+# Add subdirectories for server and client
+add_subdirectory(server)
+add_subdirectory(client)

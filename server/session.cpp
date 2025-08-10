@@ -1,6 +1,6 @@
-#include "include/session.hpp"
-#include "include/json_parser.hpp"
-#include "include/user_manager.hpp"
+#include "include/session.h"
+#include "include/json_parser.h"
+#include "include/user_manager.h"
 #include <iostream>
 
 Session::Session(tcp::socket socket, std::shared_ptr<JsonParser> json_parser)

@@ -18,7 +18,7 @@ foreach(path IN LISTS CMAKE_LIBRARY_PATH)
     endif()
 endforeach()
 
-# Create executables
+# Create server executable
 add_executable(server 
     server.cpp 
     database.cpp
@@ -27,8 +27,6 @@ add_executable(server
     json_parser.cpp
     session.cpp
 )
-add_executable(client client.cpp)
-add_executable(simple_test_client simple_test_client.cpp)
 
 # Set C++ properties and include directories
 target_include_directories(server PRIVATE 
@@ -36,12 +34,8 @@ target_include_directories(server PRIVATE
     ${Boost_INCLUDE_DIRS}
     ${SQLite3_INCLUDE_DIRS}
 )
-target_include_directories(client PRIVATE 
-    ${CMAKE_CURRENT_SOURCE_DIR} 
-    ${Boost_INCLUDE_DIRS}
-)
 
-# Platform-specific libraries
+# Platform-specific libraries for server
 if(WIN32)
     # Windows CRT libraries for SQLite (if needed)
     if(MSVC)
@@ -65,21 +59,6 @@ if(WIN32)
             mswsock     # Microsoft Winsock
         )
     endif()
-
-    target_link_libraries(client 
-        PRIVATE
-        Boost::system
-        nlohmann_json::nlohmann_json
-        ws2_32
-        mswsock  
-    )
-    target_link_libraries(simple_test_client 
-        PRIVATE
-        Boost::system
-        nlohmann_json::nlohmann_json
-        ws2_32
-        mswsock  
-    )
     
 elseif(UNIX)
     # Linux/Unix libraries
@@ -91,18 +70,6 @@ elseif(UNIX)
         pthread     # POSIX threads
         dl          # Dynamic loading
     )
-    target_link_libraries(client 
-        PRIVATE
-        Boost::system
-        nlohmann_json::nlohmann_json
-        pthread
-    )
-    target_link_libraries(simple_test_client 
-        PRIVATE
-        Boost::system
-        nlohmann_json::nlohmann_json
-        pthread
-    )
     
 elseif(APPLE)
     # macOS specific libraries (if needed)
@@ -113,21 +80,9 @@ elseif(APPLE)
         nlohmann_json::nlohmann_json
         pthread
     )
-    target_link_libraries(client 
-        PRIVATE
-        Boost::system
-        nlohmann_json::nlohmann_json
-        pthread
-    )
-    target_link_libraries(simple_test_client 
-        PRIVATE
-        Boost::system
-        nlohmann_json::nlohmann_json
-        pthread
-    )
 endif()
 
-# Set output directory for executables (optional)
-set_target_properties(server client simple_test_client PROPERTIES
+# Set output directory for executables
+set_target_properties(server PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )

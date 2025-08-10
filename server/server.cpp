@@ -7,11 +7,11 @@
 #include <ctime>
 #include <nlohmann/json.hpp>
 #include "include/common.hpp"
-#include "include/database.hpp"
-#include "include/user_manager.hpp"
-#include "include/router.hpp"
-#include "include/json_parser.hpp"
-#include "include/session.hpp"
+#include "include/database.h"
+#include "include/user_manager.h"
+#include "include/router.h"
+#include "include/json_parser.h"
+#include "include/session.h"
 
 using boost::asio::ip::tcp;
 using json = nlohmann::json;
