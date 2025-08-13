@@ -94,9 +94,9 @@ void JsonParser::handleLogin(const json& message, std::shared_ptr<Session> sessi
             user_manager_.addSession(user_id, username, session);
             
             sendResponse(session, "login", true, "Login successful");
-            
-            // TODO: Отправить оффлайн сообщения
-            // router_.sendStoredMessages(user_id, session);
+
+            // Вот тут не забыть фикснуть чтобы отправить оффлайн сообщения!
+            //router_.sendStoredMessages(user_id, session);
         } else {
             sendResponse(session, "login", false, "Invalid username or password");
         }

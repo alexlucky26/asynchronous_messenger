@@ -6,7 +6,7 @@
 UserManager::UserManager(Database& db) : db_(db) {}
 
 std::string UserManager::hashPassword(const std::string& password) {
-    // Простая реализация хеширования (в реальном проекте используйте bcrypt или подобные)
+    // Простая реализация хеширования, но в реальном проекте будет использоваться bcrypt или подобные!
     std::hash<std::string> hasher;
     size_t hash = hasher(password + "salt_key_2024"); // Добавляем соль
     return std::to_string(hash);

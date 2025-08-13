@@ -19,6 +19,7 @@ void Session::start() {
 void Session::send(const nlohmann::json& message) {
     try {
         std::string serialized = message.dump() + "\n";  // Добавляем разделитель
+        std::cout << "Sending to client: " << serialized.substr(0, serialized.length()-1) << std::endl;
         
         auto self(shared_from_this());
         boost::asio::async_write(socket_, boost::asio::buffer(serialized),
@@ -26,6 +27,8 @@ void Session::send(const nlohmann::json& message) {
                 if (ec) {
                     std::cerr << "Write error: " << ec.message() << std::endl;
                     close();
+                } else {
+                    std::cout << "Successfully sent " << length << " bytes" << std::endl;
                 }
             });
     } catch (const std::exception& e) {

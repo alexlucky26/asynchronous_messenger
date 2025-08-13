@@ -1,6 +1,7 @@
-// Клиентское приложение должно обеспечивать следующие функции:
+// ASYNCHRONOUS MESSENGER CLIENT
+// Полнофункциональный клиент с поддержкой:
 // Регистрация пользователя
-// Авторизация пользователя
+// Авторизация пользователя  
 // Отправка текстовых сообщений
 // Получение сообщений в реальном времени
 // Отображение статуса "пользователь печатает"
@@ -10,74 +11,67 @@
 #include <iostream>
 #include <boost/asio.hpp>
 #include <memory>
+#include <thread>
 #include "common.hpp"
-
-using boost::asio::ip::tcp;
-
-class Client {
-public:
-    Client(boost::asio::io_context& io_context, const std::string& host, const std::string& port)
-        : resolver_(io_context), socket_(io_context) {
-        connect(host, port);
-    }
-
-private:
-    void connect(const std::string& host, const std::string& port) {
-        tcp::resolver::results_type endpoints = resolver_.resolve(host, port);
-        boost::asio::async_connect(socket_, endpoints,
-            [this](boost::system::error_code ec, tcp::endpoint) {
-                if (!ec) {
-                    std::cout << "Connected to server!" << std::endl;
-                    send_request();
-                } else {
-                    std::cerr << "Connection failed: " << ec.message() << std::endl;
-                }
-            });
-    }
-
-    void send_request() {
-        std::string request = "Hello from client!";
-        boost::asio::async_write(socket_, boost::asio::buffer(request),
-            [this](boost::system::error_code ec, std::size_t) {
-                if (!ec) {
-                    receive_response();
-                }
-            });
-    }
-
-    void receive_response() {
-        boost::asio::async_read_until(socket_, response_buffer_, "\n",
-            [this](boost::system::error_code ec, std::size_t length) {
-                if (!ec) {
-                    std::istream response_stream(&response_buffer_);
-                    std::string response;
-                    std::getline(response_stream, response);
-                    std::cout << "Response from server: " << response << std::endl;
-                }
-            });
-    }
-
-    tcp::resolver resolver_;
-    tcp::socket socket_;
-    boost::asio::streambuf response_buffer_;
-};
+#include "client_connection.h"
+#include "client_state_machine.h"
+#include "message_receiver.h"
+#include "client_ui.h"
 
 int main(int argc, char* argv[]) {
-    if (argc != 3) {
-        std::cerr << "Usage: client <host> <port>\n";
-        return 1;
-    }
-
     try {
-        std::cout << "Connecting to " << argv[1] << ":" << argv[2] << std::endl;
+        std::locale::global(std::locale("ru_RU.UTF-8"));
+        std::wcout.imbue(std::locale());
+
+        std::cout << "Запуск Asynchronous Messenger Client..." << std::endl;
         
+        // Create IO context for async operations
         boost::asio::io_context io_context;
-        Client client(io_context, argv[1], argv[2]);
-        io_context.run();
         
-        std::cout << "Client finished." << std::endl;
-    } catch (std::exception& e) {
-        std::cerr << "Exception: " << e.what() << std::endl;
+        // Create connection manager
+        auto connection = std::make_shared<ClientConnection>(io_context);
+        
+        // Create state machine
+        auto state_machine = std::make_shared<ClientStateMachine>(connection);
+        
+        // Create message receiver
+        auto message_receiver = std::make_shared<MessageReceiver>(connection, state_machine);
+        
+        // Set message receiver in state machine
+        state_machine->setMessageReceiver(message_receiver);
+        
+        // Create UI
+        auto ui = std::make_unique<ClientUI>(state_machine, message_receiver);
+        
+        // Run IO context in separate thread
+        std::thread io_thread([&io_context]() {
+            std::cout << "IO thread started" << std::endl;
+            try {
+                // Keep io_context alive with work guard to prevent premature exit
+                boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work_guard(io_context.get_executor());
+                io_context.run();
+                std::cout << "IO thread finished" << std::endl;
+            } catch (const std::exception& e) {
+                std::cerr << "IO thread error: " << e.what() << std::endl;
+            }
+        });
+        
+        // Run UI in main thread
+        ui->run();
+        
+        // Cleanup
+        std::cout << "Завершение работы клиента..." << std::endl;
+        io_context.stop();
+        
+        if (io_thread.joinable()) {
+            io_thread.join();
+        }
+        
+        std::cout << "Клиент завершил работу." << std::endl;
+        
+    } catch (const std::exception& e) {
+        std::cerr << "Ошибка клиента: " << e.what() << std::endl;
+        return 1;
     }
 
     return 0;

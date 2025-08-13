@@ -53,24 +53,8 @@ private:
     std::shared_ptr<JsonParser> json_parser_;
 };
 
-int main(int argc, char* argv[]) {
-    try {
-        int port = PORT;
-        if (argc > 2) {
-            std::cerr << "Usage: server <port>\n";
-            return 1;
-        }
-        else if (argc == 2) {
-            port = std::atoi(argv[1]);
-        }
-
-        std::cout << "Starting Asynchronous Messenger Server on port " << port << std::endl;
-        
-        boost::asio::io_context io_context;
-        Server server(io_context, port);
-        
-        std::cout << "Server listening on port " << port << std::endl;
-
+static void ShowJsonExamples()
+{
         // Пример протокола сообщений
         json example_register;
         example_register["type"] = "register";
@@ -99,7 +83,26 @@ int main(int argc, char* argv[]) {
         std::cout << "Message: " << example_message.dump(2) << std::endl;
         std::cout << "Typing: " << example_typing.dump(2) << std::endl;
         std::cout << "================================\n" << std::endl;
+}
+
+int main(int argc, char* argv[]) {
+    try {
+        int port = PORT;
+        if (argc > 2) {
+            std::cerr << "Usage: server <port>\n";
+            return 1;
+        }
+        else if (argc == 2) {
+            port = std::atoi(argv[1]);
+        }
+        std::cout << "Starting Asynchronous Messenger Server on port " << port << std::endl;
         
+        boost::asio::io_context io_context;
+        Server server(io_context, port);
+        std::cout << "Server listening on port " << port << std::endl;
+
+        ShowJsonExamples();
+
         io_context.run();
         
     } catch (std::exception& e) {

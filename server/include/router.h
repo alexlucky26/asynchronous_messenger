@@ -20,10 +20,10 @@ public:
     // File operations (for future implementation)
     void routeFileTransfer(const nlohmann::json& message, std::shared_ptr<Session> sender_session);
 
+    void sendStoredMessages(int user_id, std::shared_ptr<Session> session);
 private:
     void deliverMessage(const nlohmann::json& message, int sender_id, const std::string& receiver_username);
-    void storeOfflineMessage(const nlohmann::json& message, int sender_id, int receiver_id);
-    void sendStoredMessages(int user_id, std::shared_ptr<Session> session);
+    //void storeOfflineMessage(const nlohmann::json& message, int sender_id, int receiver_id);
     
     Database& db_;
     UserManager& user_manager_;

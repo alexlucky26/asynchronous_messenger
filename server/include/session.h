@@ -9,7 +9,7 @@
 
 using boost::asio::ip::tcp;
 
-class JsonParser; // Forward declaration
+class JsonParser;
 
 class Session : public std::enable_shared_from_this<Session> {
 public:

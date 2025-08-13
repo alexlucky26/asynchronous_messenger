@@ -16,6 +16,7 @@ void Router::routeMessage(const json& message, std::shared_ptr<Session> sender_s
             std::string receiver_username = message["to"];
             deliverMessage(message, sender_user_id, receiver_username);
         } else {
+            // Обработка других типов сообщений, которые реализую позже
             std::cerr << "Unknown message type: " << message_type << std::endl;
         }
     } catch (const std::exception& e) {
@@ -84,20 +85,20 @@ void Router::deliverMessage(const json& message, int sender_id, const std::strin
     }
 }
 
-void Router::storeOfflineMessage(const json& message, int sender_id, int receiver_id) {
-    try {
-        std::string content = message["content"];
-        bool stored = db_.storeMessage(sender_id, receiver_id, content);
+// void Router::storeOfflineMessage(const json& message, int sender_id, int receiver_id) {
+//     try {
+//         std::string content = message["content"];
+//         bool stored = db_.storeMessage(sender_id, receiver_id, content);
         
-        if (stored) {
-            std::cout << "Offline message stored for user ID: " << receiver_id << std::endl;
-        } else {
-            std::cerr << "Failed to store offline message" << std::endl;
-        }
-    } catch (const std::exception& e) {
-        std::cerr << "Error storing offline message: " << e.what() << std::endl;
-    }
-}
+//         if (stored) {
+//             std::cout << "Offline message stored for user ID: " << receiver_id << std::endl;
+//         } else {
+//             std::cerr << "Failed to store offline message" << std::endl;
+//         }
+//     } catch (const std::exception& e) {
+//         std::cerr << "Error storing offline message: " << e.what() << std::endl;
+//     }
+// }
 
 void Router::sendStoredMessages(int user_id, std::shared_ptr<Session> session) {
     try {
