@@ -58,11 +58,11 @@ std::string MessageFormatter::formatPrompt(const std::string& prompt) {
 }
 
 std::string MessageFormatter::formatError(const std::string& error) {
-    return "❌ ОШИБКА: " + error;
+    return "ОШИБКА: " + error;
 }
 
 std::string MessageFormatter::formatSuccess(const std::string& message) {
-    return "✅ " + message;
+    return message;
 }
 
 std::string MessageFormatter::padLeft(const std::string& str, int width) {

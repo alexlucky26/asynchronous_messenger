@@ -97,9 +97,11 @@ void MessageReceiver::handleServerResponse(const nlohmann::json& response) {
     } else if (type == "register_response") {
         if (success) {
             state_machine_->transitionToState(ClientState::Registered);
-            state_machine_->transitionToState(ClientState::LoggedIn);
-            state_machine_->transitionToState(ClientState::Menu);
+            // НЕ переходим в LoggedIn - пользователь должен залогиниться отдельно
             std::cout << "✅ " << message << std::endl;
+            std::cout << "Теперь войдите в систему с вашими данными." << std::endl;
+            // Возвращаемся в AwaitingLogin для логина
+            state_machine_->transitionToState(ClientState::AwaitingLogin);
         } else {
             std::cout << "❌ Registration failed: " << message << std::endl;
             // Stay in AwaitingLogin state
