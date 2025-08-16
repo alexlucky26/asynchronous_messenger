@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include <thread>
+#include <chrono>
 #include "client_state_machine.h" // This will include ClientState enum
 
 // Forward declarations
@@ -70,6 +71,9 @@ private:
     void setupMessageCallbacks();
     void startChatThread();
     void stopChatThread();
+    void startTypingCleanupThread();
+    void stopTypingCleanupThread();
+    void clearTypingStatusAfterDelay();
 
     std::shared_ptr<ClientStateMachine> state_machine_;
     std::shared_ptr<MessageReceiver> message_receiver_;
@@ -80,10 +84,14 @@ private:
     bool in_chat_mode_;
     std::string current_chat_target_;
     std::string current_typing_status_;
+    std::string current_typing_user_;
+    std::chrono::steady_clock::time_point last_typing_time_;
     
     // Threading for chat input
     std::unique_ptr<std::thread> chat_thread_;
     bool chat_thread_running_;
+    std::unique_ptr<std::thread> typing_cleanup_thread_;
+    bool typing_cleanup_running_;
 };
 
 #endif // CLIENT_UI_H

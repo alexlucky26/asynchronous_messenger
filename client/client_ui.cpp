@@ -20,7 +20,8 @@ ClientUI::ClientUI(std::shared_ptr<ClientStateMachine> state_machine,
                    std::shared_ptr<MessageReceiver> message_receiver)
     : state_machine_(state_machine), message_receiver_(message_receiver),
       formatter_(std::make_unique<MessageFormatter>()),
-      running_(false), in_chat_mode_(false), chat_thread_running_(false) {
+      running_(false), in_chat_mode_(false), chat_thread_running_(false),
+      typing_cleanup_running_(false) {
     
     setupMessageCallbacks();
 }
@@ -43,6 +44,7 @@ void ClientUI::run() {
 void ClientUI::shutdown() {
     running_ = false;
     stopChatThread();
+    stopTypingCleanupThread();
     
     if (state_machine_) {
         state_machine_->logout();
@@ -202,6 +204,7 @@ void ClientUI::enterChatMode(const std::string& target_username) {
     
     displayChatInterface(target_username);
     startChatThread();
+    startTypingCleanupThread();
 }
 
 void ClientUI::exitChatMode() {
@@ -211,8 +214,10 @@ void ClientUI::exitChatMode() {
     
     in_chat_mode_ = false;
     stopChatThread();
+    stopTypingCleanupThread();
     current_chat_target_.clear();
     current_typing_status_.clear();
+    current_typing_user_.clear();
     
     state_machine_->exitChat();
 }
@@ -389,12 +394,26 @@ void ClientUI::displayMessage(const std::string& sender, const std::string& cont
 
 void ClientUI::displayTypingStatus(const std::string& username, bool is_typing) {
     if (is_typing) {
+        // Сначала очищаем предыдущий статус если есть
+        if (!current_typing_status_.empty()) {
+            std::cout << "\r" << std::string(current_typing_status_.length() + 10, ' ') << "\r";
+        }
+        
         current_typing_status_ = formatter_->formatTypingStatus(username, true);
-        std::cout << current_typing_status_ << std::endl;
+        current_typing_user_ = username;
+        last_typing_time_ = std::chrono::steady_clock::now();
+        
+        std::cout << current_typing_status_ << std::flush;
     } else {
-        current_typing_status_.clear();
-        // Clear the typing status line
-        std::cout << "\r                                    \r";
+        // Очищаем статус конкретного пользователя
+        if (!current_typing_status_.empty() && current_typing_user_ == username) {
+            std::cout << "\r" << std::string(current_typing_status_.length() + 10, ' ') << "\r";
+            current_typing_status_.clear();
+            current_typing_user_.clear();
+            
+            // Показываем prompt заново
+            std::cout << "> " << std::flush;
+        }
     }
 }
 
@@ -496,4 +515,45 @@ void ClientUI::displayError(const std::string& error) {
 
 void ClientUI::displaySuccess(const std::string& message) {
     std::cout << formatter_->formatSuccess(message) << std::endl;
+}
+
+void ClientUI::startTypingCleanupThread() {
+    if (typing_cleanup_running_) {
+        return;
+    }
+    
+    typing_cleanup_running_ = true;
+    typing_cleanup_thread_ = std::make_unique<std::thread>([this]() {
+        while (typing_cleanup_running_ && in_chat_mode_) {
+            clearTypingStatusAfterDelay();
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        }
+    });
+}
+
+void ClientUI::stopTypingCleanupThread() {
+    typing_cleanup_running_ = false;
+    
+    if (typing_cleanup_thread_ && typing_cleanup_thread_->joinable()) {
+        typing_cleanup_thread_->join();
+    }
+    typing_cleanup_thread_.reset();
+}
+
+void ClientUI::clearTypingStatusAfterDelay() {
+    // Если есть статус "печатает" и прошло больше 3 секунд с последнего обновления
+    if (!current_typing_status_.empty() && !current_typing_user_.empty()) {
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - last_typing_time_);
+        
+        if (elapsed.count() >= 3) {
+            // Очищаем статус
+            std::cout << "\r" << std::string(current_typing_status_.length() + 10, ' ') << "\r";
+            current_typing_status_.clear();
+            current_typing_user_.clear();
+            
+            // Показываем prompt заново
+            std::cout << "> " << std::flush;
+        }
+    }
 }

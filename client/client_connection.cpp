@@ -68,9 +68,10 @@ void ClientConnection::send(const std::string& raw_message) {
         
         if (ec) {
             handle_error("Send failed: " + ec.message());
-        } else {
-            std::cout << "Sent: " << raw_message.substr(0, raw_message.length()-1) << std::endl; // Remove newline for display
-        }
+        } 
+        // else {
+        //     std::cout << "Sent: " << raw_message.substr(0, raw_message.length()-1) << std::endl; // Remove newline for display
+        // }
     } catch (const std::exception& e) {
         handle_error("Send error: " + std::string(e.what()));
     }
@@ -100,15 +101,15 @@ void ClientConnection::do_read() {
         return;
     }
 
-    std::cout << "Starting async_read_some..." << std::endl;
+    //std::cout << "Starting async_read_some..." << std::endl;
     socket_.async_read_some(boost::asio::buffer(read_buffer_),
         [this](boost::system::error_code ec, std::size_t length) {
-            std::cout << "Read callback - ec: " << ec.message() << ", length: " << length << std::endl;
+            //std::cout << "Read callback - ec: " << ec.message() << ", length: " << length << std::endl;
             
             if (!ec && receiving_) {
                 // Append received data to message buffer
                 message_buffer_.append(read_buffer_.data(), length);
-                std::cout << "Current buffer: '" << message_buffer_ << "'" << std::endl;
+                //std::cout << "Current buffer: '" << message_buffer_ << "'" << std::endl;
                 
                 // Process complete messages (separated by newline)
                 size_t pos = 0;
@@ -116,7 +117,7 @@ void ClientConnection::do_read() {
                     std::string complete_message = message_buffer_.substr(0, pos);
                     message_buffer_.erase(0, pos + 1);
                     
-                    std::cout << "Processing complete message: '" << complete_message << "'" << std::endl;
+                    //std::cout << "Processing complete message: '" << complete_message << "'" << std::endl;
                     
                     if (!complete_message.empty()) {
                         handle_message(complete_message);
@@ -137,7 +138,7 @@ void ClientConnection::do_read() {
 
 void ClientConnection::handle_message(const std::string& message) {
     try {
-        std::cout << "Received: " << message << std::endl;
+        //std::cout << "Received: " << message << std::endl;
         
         json parsed_message = json::parse(message);
         

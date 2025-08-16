@@ -55,7 +55,7 @@ void MessageReceiver::handleIncomingMessage(const nlohmann::json& message) {
         }
         
         std::string type = message["type"];
-        std::cout << "MessageReceiver: Processing message type: " << type << std::endl;
+        //std::cout << "MessageReceiver: Processing message type: " << type << std::endl;
         
         if (type.length() > 9 && type.substr(type.length() - 9) == "_response") {
             // Server responses (login_response, register_response, message_response)
@@ -83,7 +83,7 @@ void MessageReceiver::handleServerResponse(const nlohmann::json& response) {
     bool success = response.value("success", false);
     std::string message = response.value("message", "");
     
-    std::cout << "Server response - Type: " << type << ", Success: " << success << ", Message: " << message << std::endl;
+    //std::cout << "Server response - Type: " << type << ", Success: " << success << ", Message: " << message << std::endl;
     
     if (type == "login_response") {
         if (success) {
@@ -107,11 +107,14 @@ void MessageReceiver::handleServerResponse(const nlohmann::json& response) {
             // Stay in AwaitingLogin state
         }
     } else if (type == "message_response") {
-        if (success) {
-            std::cout << "✅ Message sent successfully" << std::endl;
-        } else {
+        if (!success) {
             std::cout << "❌ Message failed to send: " << message << std::endl;
         }
+        // if (success) {
+        //     std::cout << "✅ Message sent successfully" << std::endl;
+        // } else {
+        //     std::cout << "❌ Message failed to send: " << message << std::endl;
+        // }
     }
 }
 
