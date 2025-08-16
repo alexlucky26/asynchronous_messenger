@@ -17,14 +17,11 @@ enum class ClientState {
     Registered,
     LoggedIn,
     Menu,
-    ChatSelected,
     Chatting
 };
 
 class ClientStateMachine {
 public:
-    using StateChangeCallback = std::function<void(ClientState, ClientState)>;
-
     ClientStateMachine(std::shared_ptr<ClientConnection> connection);
     ~ClientStateMachine();
 
@@ -47,9 +44,6 @@ public:
     const std::string& getCurrentUsername() const { return current_username_; }
     const std::string& getChatTarget() const { return chat_target_; }
 
-    // Callbacks
-    void setStateChangeCallback(StateChangeCallback callback) { state_change_callback_ = callback; }
-
     // Initialize message receiver (call after construction)
     void setMessageReceiver(std::shared_ptr<MessageReceiver> message_receiver) {
         message_receiver_ = message_receiver;
@@ -65,9 +59,6 @@ private:
     // User session data
     std::string current_username_;
     std::string chat_target_;
-    
-    // Callbacks
-    StateChangeCallback state_change_callback_;
 };
 
 #endif // CLIENT_STATE_MACHINE_H

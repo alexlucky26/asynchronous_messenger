@@ -73,6 +73,12 @@ void Router::deliverMessage(const json& message, int sender_id, const std::strin
             delivery_message["timestamp"] = std::time(nullptr);
             delivery_message["delivered"] = true;
             
+            // Добавляем информацию об отправителе
+            auto sender_user = user_manager_.getUserById(sender_id);
+            if (sender_user != nullptr) {
+                delivery_message["from"] = sender_user->username;
+            }
+            
             receiver_session->send(delivery_message);
             std::cout << "Message delivered to " << receiver_username << " (online)" << std::endl;
         } else {

@@ -18,16 +18,9 @@ ClientStateMachine::~ClientStateMachine() {
 }
 
 void ClientStateMachine::transitionToState(ClientState new_state) {
-    ClientState old_state = current_state_;
-    current_state_ = new_state;
-    
     std::cout << "State changed from " << getStateString() << " to ";
     current_state_ = new_state;
     std::cout << getStateString() << std::endl;
-    
-    if (state_change_callback_) {
-        state_change_callback_(old_state, new_state);
-    }
 }
 
 std::string ClientStateMachine::getStateString() const {
@@ -39,7 +32,6 @@ std::string ClientStateMachine::getStateString() const {
         case ClientState::Registered: return "Registered";
         case ClientState::LoggedIn: return "LoggedIn";
         case ClientState::Menu: return "Menu";
-        case ClientState::ChatSelected: return "ChatSelected";
         case ClientState::Chatting: return "Chatting";
         default: return "Unknown";
     }
@@ -105,7 +97,6 @@ void ClientStateMachine::startChat(const std::string& target_username) {
     }
 
     chat_target_ = target_username;
-    transitionToState(ClientState::ChatSelected);
     transitionToState(ClientState::Chatting);
 }
 

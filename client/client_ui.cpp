@@ -12,6 +12,8 @@
 #else
 #include <termios.h>
 #include <unistd.h>
+#include <sys/select.h>
+#include <fcntl.h>
 #endif
 
 ClientUI::ClientUI(std::shared_ptr<ClientStateMachine> state_machine, 
@@ -155,7 +157,7 @@ bool ClientUI::performLogin() {
     std::string username = getInput("Имя пользователя");
     std::string password = getPassword("Пароль");
     
-    if (username.empty() || password.empty()) {
+     if (username.empty() || password.empty()) {
         displayError("Имя пользователя и пароль не могут быть пустыми");
         return true;
     }
@@ -249,8 +251,121 @@ void ClientUI::stopChatThread() {
 
 void ClientUI::handleChatInput() {
     std::cout << "> ";
+    
     std::string input;
-    std::getline(std::cin, input);
+    bool is_typing = false;
+    auto last_keypress = std::chrono::steady_clock::now();
+    
+    // Таймер для проверки статуса typing
+    std::thread typing_timer([&]() {
+        while (chat_thread_running_ && in_chat_mode_) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            
+            auto now = std::chrono::steady_clock::now();
+            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_keypress);
+            
+            // Если прошло больше 1 секунды без ввода и мы "печатаем" - сбрасываем статус
+            if (elapsed > std::chrono::milliseconds(1000) && is_typing) {
+                is_typing = false;
+                state_machine_->sendTypingStatus(false);
+            }
+        }
+    });
+    
+#ifdef _WIN32
+    // Windows: посимвольное чтение
+    char ch;
+    while (chat_thread_running_ && in_chat_mode_) {
+        if (_kbhit()) {
+            ch = _getch();
+            
+            if (ch == '\r') { // Enter
+                break;
+            } else if (ch == '\b') { // Backspace
+                if (!input.empty()) {
+                    input.pop_back();
+                    std::cout << "\b \b";
+                }
+            } else if (ch >= 32 && ch <= 126) { // Печатные символы
+                input.push_back(ch);
+                std::cout << ch;
+                
+                // Отправляем статус "печатает" при первом символе
+                if (!is_typing && !input.empty()) {
+                    is_typing = true;
+                    state_machine_->sendTypingStatus(true);
+                }
+            }
+            
+            // Обновляем время последнего нажатия клавиши
+            last_keypress = std::chrono::steady_clock::now();
+        }
+        
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+#else
+    // Unix: посимвольное чтение с termios
+    struct termios old_termios, new_termios;
+    tcgetattr(STDIN_FILENO, &old_termios);
+    new_termios = old_termios;
+    new_termios.c_lflag &= ~(ICANON | ECHO); // Отключаем канонический режим и эхо
+    new_termios.c_cc[VMIN] = 0;  // Неблокирующее чтение
+    new_termios.c_cc[VTIME] = 0;
+    tcsetattr(STDIN_FILENO, TCSANOW, &new_termios);
+    
+    char ch;
+    fd_set readfds;
+    struct timeval timeout;
+    
+    while (chat_thread_running_ && in_chat_mode_) {
+        FD_ZERO(&readfds);
+        FD_SET(STDIN_FILENO, &readfds);
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 10000; // 10ms timeout
+        
+        int result = select(STDIN_FILENO + 1, &readfds, NULL, NULL, &timeout);
+        
+        if (result > 0 && FD_ISSET(STDIN_FILENO, &readfds)) {
+            if (read(STDIN_FILENO, &ch, 1) > 0) {
+                if (ch == '\n' || ch == '\r') { // Enter
+                    break;
+                } else if (ch == 127 || ch == '\b') { // Backspace/Delete
+                    if (!input.empty()) {
+                        input.pop_back();
+                        std::cout << "\b \b" << std::flush;
+                    }
+                } else if (ch >= 32 && ch <= 126) { // Печатные символы
+                    input.push_back(ch);
+                    std::cout << ch << std::flush;
+                    
+                    // Отправляем статус "печатает" при первом символе
+                    if (!is_typing && !input.empty()) {
+                        is_typing = true;
+                        state_machine_->sendTypingStatus(true);
+                    }
+                }
+                
+                // Обновляем время последнего нажатия клавиши
+                last_keypress = std::chrono::steady_clock::now();
+            }
+        }
+        
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    
+    // Восстанавливаем настройки терминала
+    tcsetattr(STDIN_FILENO, TCSANOW, &old_termios);
+#endif
+    
+    // Завершаем таймер
+    typing_timer.detach();
+    
+    // Сбрасываем статус "печатает" после завершения ввода
+    if (is_typing) {
+        state_machine_->sendTypingStatus(false);
+    }
+    
+    std::cout << std::endl;
     
     if (input == "/exit") {
         exitChatMode();
