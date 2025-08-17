@@ -49,6 +49,11 @@ void Session::close() {
         
         std::cout << "Closing session for user: " << username_ << std::endl;
         
+        // Удаляем сессию из UserManager если пользователь был аутентифицирован
+        if (authenticated_ && json_parser_) {
+            json_parser_->removeSessionFromManager(user_id_);
+        }
+        
         boost::system::error_code ec;
         socket_.shutdown(tcp::socket::shutdown_both, ec);
         socket_.close(ec);

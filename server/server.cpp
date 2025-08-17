@@ -53,37 +53,37 @@ private:
     std::shared_ptr<JsonParser> json_parser_;
 };
 
-static void ShowJsonExamples()
-{
-        // Пример протокола сообщений
-        json example_register;
-        example_register["type"] = "register";
-        example_register["username"] = "user1";
-        example_register["email"] = "user1@example.com";
-        example_register["password"] = "password123";
+// static void ShowJsonExamples()
+// {
+//         // Пример протокола сообщений
+//         json example_register;
+//         example_register["type"] = "register";
+//         example_register["username"] = "user1";
+//         example_register["email"] = "user1@example.com";
+//         example_register["password"] = "password123";
         
-        json example_login;
-        example_login["type"] = "login";
-        example_login["username"] = "user1";
-        example_login["password"] = "password123";
+//         json example_login;
+//         example_login["type"] = "login";
+//         example_login["username"] = "user1";
+//         example_login["password"] = "password123";
         
-        json example_message;
-        example_message["type"] = "message";
-        example_message["to"] = "user2";
-        example_message["content"] = "Hello, World!";
+//         json example_message;
+//         example_message["type"] = "message";
+//         example_message["to"] = "user2";
+//         example_message["content"] = "Hello, World!";
         
-        json example_typing;
-        example_typing["type"] = "typing";
-        example_typing["to"] = "user2";
-        example_typing["is_typing"] = true;
+//         json example_typing;
+//         example_typing["type"] = "typing";
+//         example_typing["to"] = "user2";
+//         example_typing["is_typing"] = true;
         
-        std::cout << "\n=== Message Protocol Examples ===" << std::endl;
-        std::cout << "Register: " << example_register.dump(2) << std::endl;
-        std::cout << "Login: " << example_login.dump(2) << std::endl;
-        std::cout << "Message: " << example_message.dump(2) << std::endl;
-        std::cout << "Typing: " << example_typing.dump(2) << std::endl;
-        std::cout << "================================\n" << std::endl;
-}
+//         std::cout << "\n=== Message Protocol Examples ===" << std::endl;
+//         std::cout << "Register: " << example_register.dump(2) << std::endl;
+//         std::cout << "Login: " << example_login.dump(2) << std::endl;
+//         std::cout << "Message: " << example_message.dump(2) << std::endl;
+//         std::cout << "Typing: " << example_typing.dump(2) << std::endl;
+//         std::cout << "================================\n" << std::endl;
+// }
 
 int main(int argc, char* argv[]) {
     try {
@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
         Server server(io_context, port);
         std::cout << "Server listening on port " << port << std::endl;
 
-        ShowJsonExamples();
+        // ShowJsonExamples();
 
         io_context.run();
         

@@ -47,6 +47,8 @@ void Router::sendTypingStatus(const std::string& from_username, const std::strin
 
 void Router::deliverMessage(const json& message, int sender_id, const std::string& receiver_username) {
     try {
+        std::cout << "DEBUG: deliverMessage called - sender_id: " << sender_id << ", receiver: " << receiver_username << std::endl;
+        
         // Получаем информацию о получателе
         auto receiver_user = user_manager_.getUser(receiver_username);
         if (receiver_user == nullptr) {
@@ -57,18 +59,22 @@ void Router::deliverMessage(const json& message, int sender_id, const std::strin
         int receiver_id = receiver_user->id;
         std::string content = message["content"];
         
-        // Сохраняем сообщение в базу данных
-        bool stored = db_.storeMessage(sender_id, receiver_id, content);
-        if (!stored) {
-            std::cerr << "Failed to store message in database" << std::endl;
-            return;
-        }
+        std::cout << "DEBUG: Message content: " << content << std::endl;
         
         // Проверяем, онлайн ли получатель
         auto receiver_session = user_manager_.getSession(receiver_id);
         
+        std::cout << "DEBUG: Receiver session " << (receiver_session != nullptr ? "FOUND" : "NOT FOUND") << std::endl;
+        
         if (receiver_session != nullptr) {
-            // Пользователь онлайн - отправляем сообщение сразу
+            // Пользователь онлайн - сохраняем сообщение как доставленное
+            bool stored = db_.storeMessage(sender_id, receiver_id, content, true); // is_delivered = true
+            if (!stored) {
+                std::cerr << "Failed to store message in database" << std::endl;
+                return;
+            }
+            
+            // Отправляем сообщение сразу
             json delivery_message = message;
             delivery_message["timestamp"] = std::time(nullptr);
             delivery_message["delivered"] = true;
@@ -82,7 +88,12 @@ void Router::deliverMessage(const json& message, int sender_id, const std::strin
             receiver_session->send(delivery_message);
             std::cout << "Message delivered to " << receiver_username << " (online)" << std::endl;
         } else {
-            // Пользователь оффлайн - сообщение уже сохранено в БД
+            // Пользователь оффлайн - сохраняем сообщение как недоставленное
+            bool stored = db_.storeMessage(sender_id, receiver_id, content, false); // is_delivered = false
+            if (!stored) {
+                std::cerr << "Failed to store offline message in database" << std::endl;
+                return;
+            }
             std::cout << "Message stored for offline user: " << receiver_username << std::endl;
         }
         
@@ -108,8 +119,12 @@ void Router::deliverMessage(const json& message, int sender_id, const std::strin
 
 void Router::sendStoredMessages(int user_id, std::shared_ptr<Session> session) {
     try {
+        std::cout << "DEBUG: Checking offline messages for user ID: " << user_id << std::endl;
+        
         // Получаем все оффлайн-сообщения для пользователя
         std::vector<Message> offline_messages = db_.getOfflineMessages(user_id);
+        
+        std::cout << "DEBUG: Found " << offline_messages.size() << " offline messages" << std::endl;
         
         if (!offline_messages.empty()) {
             std::cout << "Sending " << offline_messages.size() << " stored messages to user ID: " << user_id << std::endl;
@@ -122,7 +137,8 @@ void Router::sendStoredMessages(int user_id, std::shared_ptr<Session> session) {
                 stored_message["type"] = "message";
                 stored_message["from"] = sender_user ? sender_user->username : "unknown";
                 stored_message["content"] = msg.content;
-                stored_message["timestamp"] = msg.sent_at;
+                stored_message["timestamp"] = std::time(nullptr); // Используем текущее время для совместимости
+                stored_message["original_time"] = msg.sent_at; // Оригинальное время как строка
                 stored_message["stored"] = true;
                 
                 if (msg.is_file) {
@@ -132,6 +148,9 @@ void Router::sendStoredMessages(int user_id, std::shared_ptr<Session> session) {
                 
                 session->send(stored_message);
             }
+            
+            // Удаляем доставленные сообщения
+            db_.deleteOfflineMessages(user_id);
         }
     } catch (const std::exception& e) {
         std::cerr << "Error sending stored messages: " << e.what() << std::endl;

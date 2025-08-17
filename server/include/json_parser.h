@@ -17,6 +17,9 @@ public:
     // Message parsing and handling
     void parseMessage(const std::string& raw_message, std::shared_ptr<Session> session);
     
+    // Session management
+    void removeSessionFromManager(int user_id);
+    
 private:
     void handleRequest(const nlohmann::json& message, std::shared_ptr<Session> session);
     

@@ -23,6 +23,7 @@ void Database::initialize() {
         "sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,"
         "is_file BOOLEAN DEFAULT FALSE,"
         "file_path TEXT,"
+        "is_delivered BOOLEAN DEFAULT FALSE,"
         "FOREIGN KEY(sender_id) REFERENCES users(id),"
         "FOREIGN KEY(receiver_id) REFERENCES users(id));";
 
@@ -122,8 +123,8 @@ std::unique_ptr<User> Database::getUserById(int user_id) {
     return user;
 }
 
-bool Database::storeMessage(int sender_id, int receiver_id, const std::string& content, bool is_file, const std::string& file_path) {
-    const char* sql = "INSERT INTO messages (sender_id, receiver_id, content, is_file, file_path) VALUES (?, ?, ?, ?, ?);";
+bool Database::storeMessage(int sender_id, int receiver_id, const std::string& content, bool is_delivered, bool is_file, const std::string& file_path) {
+    const char* sql = "INSERT INTO messages (sender_id, receiver_id, content, is_file, file_path, is_delivered) VALUES (?, ?, ?, ?, ?, ?);";
     
     sqlite3_stmt* stmt;
     if (sqlite3_prepare_v2(db_, sql, -1, &stmt, NULL) != SQLITE_OK) {
@@ -136,6 +137,7 @@ bool Database::storeMessage(int sender_id, int receiver_id, const std::string& c
     sqlite3_bind_text(stmt, 3, content.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_int(stmt, 4, is_file ? 1 : 0);
     sqlite3_bind_text(stmt, 5, file_path.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 6, is_delivered ? 1 : 0);
     
     int result = sqlite3_step(stmt);
     sqlite3_finalize(stmt);
@@ -144,7 +146,7 @@ bool Database::storeMessage(int sender_id, int receiver_id, const std::string& c
 }
 
 std::vector<Message> Database::getMessages(int user_id, int other_user_id, int limit) {
-    const char* sql = "SELECT id, sender_id, receiver_id, content, sent_at, is_file, file_path FROM messages "
+    const char* sql = "SELECT id, sender_id, receiver_id, content, sent_at, is_file, file_path, is_delivered FROM messages "
                       "WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?) "
                       "ORDER BY sent_at DESC LIMIT ?;";
     
@@ -173,6 +175,7 @@ std::vector<Message> Database::getMessages(int user_id, int other_user_id, int l
         
         const char* file_path = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 6));
         msg.file_path = file_path ? file_path : "";
+        msg.is_delivered = sqlite3_column_int(stmt, 7) != 0;
         
         messages.push_back(msg);
     }
@@ -182,8 +185,8 @@ std::vector<Message> Database::getMessages(int user_id, int other_user_id, int l
 }
 
 std::vector<Message> Database::getOfflineMessages(int user_id) {
-    const char* sql = "SELECT id, sender_id, receiver_id, content, sent_at, is_file, file_path FROM messages "
-                      "WHERE receiver_id = ? ORDER BY sent_at ASC;";
+    const char* sql = "SELECT id, sender_id, receiver_id, content, sent_at, is_file, file_path, is_delivered FROM messages "
+                      "WHERE receiver_id = ? AND is_delivered = 0 ORDER BY sent_at ASC;";
     
     sqlite3_stmt* stmt;
     std::vector<Message> messages;
@@ -206,10 +209,34 @@ std::vector<Message> Database::getOfflineMessages(int user_id) {
         
         const char* file_path = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 6));
         msg.file_path = file_path ? file_path : "";
+        msg.is_delivered = sqlite3_column_int(stmt, 7) != 0;
         
         messages.push_back(msg);
     }
     
     sqlite3_finalize(stmt);
     return messages;
+}
+
+bool Database::deleteOfflineMessages(int user_id) {
+    const char* sql = "DELETE FROM messages WHERE receiver_id = ? AND is_delivered = 0;";
+    
+    sqlite3_stmt* stmt;
+    if (sqlite3_prepare_v2(db_, sql, -1, &stmt, NULL) != SQLITE_OK) {
+        std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db_) << std::endl;
+        return false;
+    }
+    
+    sqlite3_bind_int(stmt, 1, user_id);
+    
+    int result = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+    
+    if (result == SQLITE_DONE) {
+        std::cout << "Deleted offline messages for user ID: " << user_id << std::endl;
+        return true;
+    } else {
+        std::cerr << "Failed to delete offline messages: " << sqlite3_errmsg(db_) << std::endl;
+        return false;
+    }
 }

@@ -24,6 +24,7 @@ struct Message {
     std::string sent_at;
     bool is_file;
     std::string file_path;
+    bool is_delivered;
 };
 
 class Database {
@@ -51,9 +52,10 @@ public:
     std::unique_ptr<User> getUserById(int user_id);
     
     // Message operations
-    bool storeMessage(int sender_id, int receiver_id, const std::string& content, bool is_file = false, const std::string& file_path = "");
+    bool storeMessage(int sender_id, int receiver_id, const std::string& content, bool is_delivered = true, bool is_file = false, const std::string& file_path = "");
     std::vector<Message> getMessages(int user_id, int other_user_id, int limit = 50);
     std::vector<Message> getOfflineMessages(int user_id);
+    bool deleteOfflineMessages(int user_id);
 
 private:
     void initialize();
