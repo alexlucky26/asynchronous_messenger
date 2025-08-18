@@ -1,4 +1,5 @@
 # Client CMakeLists.txt
+include_directories(include)
 
 # Conan устанавливает CMAKE_INCLUDE_PATH через toolchain, но иногда нужно добавить явно
 foreach(path IN LISTS CMAKE_INCLUDE_PATH)

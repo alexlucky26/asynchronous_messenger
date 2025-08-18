@@ -1,6 +1,6 @@
-#include "message_receiver.h"
-#include "client_connection.h"
-#include "client_state_machine.h"
+#include "include/message_receiver.h"
+#include "include/client_connection.h"
+#include "include/client_state_machine.h"
 #include <iostream>
 
 using json = nlohmann::json;
@@ -110,11 +110,6 @@ void MessageReceiver::handleServerResponse(const nlohmann::json& response) {
         if (!success) {
             std::cout << "❌ Message failed to send: " << message << std::endl;
         }
-        // if (success) {
-        //     std::cout << "✅ Message sent successfully" << std::endl;
-        // } else {
-        //     std::cout << "❌ Message failed to send: " << message << std::endl;
-        // }
     }
 }
 
@@ -123,12 +118,20 @@ void MessageReceiver::handleChatMessage(const nlohmann::json& message) {
         std::string from = message["from"];
         std::string content = message["content"];
         std::time_t timestamp = message.value("timestamp", std::time(nullptr));
+        bool is_stored = message.value("stored", false);
+        
+        std::cout << "MessageReceiver: Received " << (is_stored ? "OFFLINE" : "LIVE") 
+                  << " message from [" << from << "]: " << content << std::endl;
         
         if (message_callback_) {
             message_callback_(message);
         } else {
             // Default display if no callback set
-            std::cout << "\n📨 [" << from << "]: " << content << std::endl;
+            std::cout << "\n📨 [" << from << "]: " << content;
+            if (is_stored) {
+                std::cout << " (offline)";
+            }
+            std::cout << std::endl;
             std::cout << "> "; // Show prompt again
             std::cout.flush();
         }

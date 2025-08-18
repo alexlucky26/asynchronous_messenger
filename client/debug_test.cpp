@@ -5,7 +5,7 @@
 #include <thread>
 #include <chrono>
 #include <nlohmann/json.hpp>
-#include "../client/client_connection.h"
+#include "include/client_connection.h"
 
 using json = nlohmann::json;
 

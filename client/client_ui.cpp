@@ -1,7 +1,7 @@
-#include "client_ui.h"
-#include "client_state_machine.h"
-#include "message_receiver.h"
-#include "message_formatter.h"
+#include "include/client_ui.h"
+#include "include/client_state_machine.h"
+#include "include/message_receiver.h"
+#include "include/message_formatter.h"
 #include <iostream>
 #include <thread>
 #include <chrono>

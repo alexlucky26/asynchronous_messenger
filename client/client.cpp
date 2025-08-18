@@ -12,11 +12,11 @@
 #include <boost/asio.hpp>
 #include <memory>
 #include <thread>
-#include "common.hpp"
-#include "client_connection.h"
-#include "client_state_machine.h"
-#include "message_receiver.h"
-#include "client_ui.h"
+#include "include/common.hpp"
+#include "include/client_connection.h"
+#include "include/client_state_machine.h"
+#include "include/message_receiver.h"
+#include "include/client_ui.h"
 
 int main(int argc, char* argv[]) {
     try {
